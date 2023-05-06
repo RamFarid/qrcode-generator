@@ -5,7 +5,7 @@ export default function handler(req, res) {
     name: 'Ram Farid',
     age: 'Not allowed',
     student: true,
-    job: 'Web devolper',
-    jobTitle: 'Front-end devolper',
+    job: 'Web developer',
+    jobTitle: 'Front-end developer',
   })
 }

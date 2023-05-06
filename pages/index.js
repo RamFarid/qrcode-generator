@@ -4,8 +4,10 @@ import TextInput from '@/components/TextInput'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import qr from 'qrcode'
+import Loader from '@/components/Loader'
 
 export default function Home({ qrcode, errorMsg, query }) {
+  const [isLoading, setIsLoading] = useState(false)
   const [text, setText] = useState(query)
   const [photoURL, setPhotoURL] = useState(qrcode || '')
   const [error, setError] = useState(errorMsg || '')
@@ -15,18 +17,31 @@ export default function Home({ qrcode, errorMsg, query }) {
     setError('')
   }, [error])
   const getQRcode = async (e) => {
-    console.log('first')
+    setError('')
+    setPhotoURL('')
+    if (!text) {
+      router.replace('/')
+      return
+    }
     try {
-      setError('')
-      setPhotoURL('')
+      setIsLoading(true)
       const response = await fetch(`/api/qrcode?text=${text}`)
       const data = await response.json()
       console.log(data)
+      setIsLoading(false)
       if (!data.success) {
         setError(data.message)
         return
       }
-      router.replace(`?text=${text}`, undefined, { shallow: true })
+      router.replace(
+        {
+          query: {
+            text: text,
+          },
+        },
+        undefined,
+        { shallow: true }
+      )
       setPhotoURL(data.data)
     } catch (error) {
       setError(error.message)
@@ -41,24 +56,25 @@ export default function Home({ qrcode, errorMsg, query }) {
         <meta name='viewport' content='width=device-width, initial-scale=1' />
         <link rel='icon' href='/favicon.ico' />
       </Head>
-      <main
-        className={`main-question-containar ${photoURL.length && 'active'}`}
-      >
+      <main className={`main-question-containar`}>
         <h1>QR code generator</h1>
         <p>Paste your URL here, it will generate your special QR Photo:</p>
         <TextInput setText={setText} text={text} />
         <button id='my-btn' onClick={(e) => getQRcode(e)}>
           Generate your own!
         </button>
-        <div className={`co ${photoURL.length && 'active'}`}>
-          {photoURL.length > 0 && (
-            <Image alt='QRcode' src={photoURL} width={200} height={200} />
-          )}
-          <a href={photoURL} download='My QR code'>
-            Download
-          </a>
+        <div className={`coco ${photoURL.length ? '' : 'disabled'}`}>
+          <div className={`co`}>
+            {photoURL.length > 0 && (
+              <Image alt='QRcode' src={photoURL} width={200} height={200} />
+            )}
+            <a href={photoURL} download='My QR code.png'>
+              Download
+            </a>
+          </div>
         </div>
       </main>
+      {isLoading && <Loader />}
     </>
   )
 }
